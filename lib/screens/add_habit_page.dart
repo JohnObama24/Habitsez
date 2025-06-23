@@ -43,7 +43,6 @@ class _AddHabitPageState extends State<AddHabitPage>
         _isLoading = true;
       });
 
-      // Simulate loading delay for better UX
       await Future.delayed(const Duration(milliseconds: 800));
 
       final newHabitName = _controller.text.trim();
@@ -96,11 +95,10 @@ class _AddHabitPageState extends State<AddHabitPage>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header Section
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Colors.teal.withOpacity(0.1),
+                    color: Colors.teal.withValues(alpha: .1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
@@ -147,7 +145,6 @@ class _AddHabitPageState extends State<AddHabitPage>
 
                 const SizedBox(height: 32),
 
-                // Input Section
                 const Text(
                   'Habit Name',
                   style: TextStyle(
@@ -193,7 +190,7 @@ class _AddHabitPageState extends State<AddHabitPage>
                       margin: const EdgeInsets.all(12),
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.teal.withOpacity(0.1),
+                        color: Colors.teal.withValues(alpha: .1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
@@ -233,13 +230,12 @@ class _AddHabitPageState extends State<AddHabitPage>
 
                 const SizedBox(height: 24),
 
-                // Tips Section
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.05),
+                    color: Colors.blue.withValues(alpha: .05),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.blue.withOpacity(0.1)),
+                    border: Border.all(color: Colors.blue.withValues(alpha: .1)),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -280,7 +276,6 @@ class _AddHabitPageState extends State<AddHabitPage>
 
                 const SizedBox(height: 40),
 
-                // Save Button
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -325,7 +320,6 @@ class _AddHabitPageState extends State<AddHabitPage>
 
                 const SizedBox(height: 16),
 
-                // Cancel Button
                 SizedBox(
                   width: double.infinity,
                   child: TextButton(

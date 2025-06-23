@@ -314,7 +314,7 @@ class _ProgressPageState extends State<ProgressPage>
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 10,
                       offset: const Offset(0, 2),
                     ),
@@ -340,7 +340,7 @@ class _ProgressPageState extends State<ProgressPage>
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.teal.withAlpha(20).withOpacity(0.08),
+                            color: Colors.teal.withAlpha(20).withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
@@ -437,7 +437,7 @@ class _ProgressPageState extends State<ProgressPage>
                                           colors: [
                                             Colors.teal
                                                 .withAlpha(204)
-                                                .withOpacity(0.8),
+                                                .withValues(alpha: 0.8),
                                             Colors.teal,
                                           ],
                                           begin: Alignment.bottomCenter,
@@ -509,7 +509,7 @@ class _ProgressPageState extends State<ProgressPage>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -532,7 +532,7 @@ class _ProgressPageState extends State<ProgressPage>
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: color.withAlpha(20).withOpacity(0.1),
+                  color: color.withAlpha(20).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(icon, size: 16, color: color),
@@ -612,7 +612,7 @@ class _ProgressPageState extends State<ProgressPage>
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 5,
                 offset: const Offset(0, 1),
               ),
@@ -625,7 +625,7 @@ class _ProgressPageState extends State<ProgressPage>
                 decoration: BoxDecoration(
                   color: (activity['color'] as Color)
                       .withAlpha(20)
-                      .withOpacity(0.1),
+                      .withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(

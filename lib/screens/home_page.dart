@@ -1,3 +1,4 @@
+// home_page.dart
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shimmer/shimmer.dart';
@@ -47,7 +48,6 @@ class HomePage extends StatelessWidget {
               ? _buildEmptyState(context)
               : RefreshIndicator(
                   onRefresh: () async {
-                    // Simulate refresh delay
                     await Future.delayed(const Duration(milliseconds: 500));
                   },
                   child: ListView.builder(
@@ -81,7 +81,7 @@ class HomePage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: Colors.teal.withAlpha(20).withOpacity(0.1),
+              color: Colors.teal.withAlpha(20).withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(Icons.track_changes, size: 64, color: Colors.teal[400]),
@@ -130,7 +130,7 @@ class HomePage extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
