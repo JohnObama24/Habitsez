@@ -10,5 +10,12 @@ class Habit extends HiveObject {
   @HiveField(1)
   bool isCompleted;
 
-  Habit({required this.name, this.isCompleted = false});
+  @HiveField(2)
+  List<DateTime> completionDates;
+
+  Habit({
+    required this.name,
+    this.isCompleted = false,
+    List<DateTime>? completionDates,
+  }) : completionDates = completionDates ?? [];
 }

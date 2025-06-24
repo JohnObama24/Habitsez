@@ -200,7 +200,30 @@ class HomePage extends StatelessWidget {
           ),
         ),
         onTap: () {
+          final today = DateTime.now();
+
           habit.isCompleted = !habit.isCompleted;
+
+          if (habit.isCompleted) {
+            if (!habit.completionDates.any(
+              (d) =>
+                  d.year == today.year &&
+                  d.month == today.month &&
+                  d.day == today.day,
+            )) {
+              print('✅ Completed Dates: ${habit.completionDates}');
+
+              habit.completionDates.add(today);
+            }
+          } else {
+            habit.completionDates.removeWhere(
+              (d) =>
+                  d.year == today.year &&
+                  d.month == today.month &&
+                  d.day == today.day,
+            );
+          }
+
           habit.save();
         },
       ),

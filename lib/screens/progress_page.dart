@@ -1,8 +1,8 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:habitsez/providers/habit_provider.dart';
+import '../models/habit.dart';
 
 class ProgressPage extends StatefulWidget {
   const ProgressPage({super.key});
@@ -48,6 +48,73 @@ class _ProgressPageState extends State<ProgressPage>
     }
   }
 
+  // Fungsi untuk menghitung weekly summary dari data Hive
+  Map<String, double> _calculateWeeklySummary() {
+    final Map<String, double> summary = {
+      'Mon': 0,
+      'Tue': 0,
+      'Wed': 0,
+      'Thu': 0,
+      'Fri': 0,
+      'Sat': 0,
+      'Sun': 0,
+    };
+
+    final box = Hive.box<Habit>('habits');
+    final habits = box.values.toList();
+    
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    
+    // Hitung untuk 7 hari terakhir
+    for (int i = 6; i >= 0; i--) {
+      final date = today.subtract(Duration(days: i));
+      final dayKey = _getDayAbbreviation(date.weekday);
+      
+      int completedCount = 0;
+      for (var habit in habits) {
+        // Cek apakah habit diselesaikan pada tanggal tersebut
+        bool completedOnDate = habit.completionDates.any((completionDate) {
+          final completionDay = DateTime(
+            completionDate.year,
+            completionDate.month,
+            completionDate.day,
+          );
+          return completionDay.isAtSameMomentAs(date);
+        });
+        
+        if (completedOnDate) {
+          completedCount++;
+        }
+      }
+      
+      summary[dayKey] = completedCount.toDouble();
+    }
+
+    return summary;
+  }
+
+  String _getDayAbbreviation(int weekday) {
+    switch (weekday) {
+      case DateTime.monday:
+        return 'Mon';
+      case DateTime.tuesday:
+        return 'Tue';
+      case DateTime.wednesday:
+        return 'Wed';
+      case DateTime.thursday:
+        return 'Thu';
+      case DateTime.friday:
+        return 'Fri';
+      case DateTime.saturday:
+        return 'Sat';
+      case DateTime.sunday:
+        return 'Sun';
+      default:
+        return '';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -78,7 +145,12 @@ class _ProgressPageState extends State<ProgressPage>
           ),
         ],
       ),
-      body: _isLoading ? _buildSkeleton() : _buildContent(),
+      body: ValueListenableBuilder<Box<Habit>>(
+        valueListenable: Hive.box<Habit>('habits').listenable(),
+        builder: (context, box, _) {
+          return _isLoading ? _buildSkeleton() : _buildContent();
+        },
+      ),
     );
   }
 
@@ -230,8 +302,9 @@ class _ProgressPageState extends State<ProgressPage>
   }
 
   Widget _buildContent() {
-    final habitProvider = Provider.of<HabitProvider>(context);
-    final weeklySummary = habitProvider.weeklySummary;
+    final weeklySummary = _calculateWeeklySummary();
+    final box = Hive.box<Habit>('habits');
+    final habits = box.values.toList();
 
     return FadeTransition(
       opacity: _fadeAnimation,
@@ -265,7 +338,7 @@ class _ProgressPageState extends State<ProgressPage>
                   Expanded(
                     child: _buildStatCard(
                       'Total Habits',
-                      '${weeklySummary.length}',
+                      '${habits.length}',
                       Icons.track_changes,
                       Colors.blue,
                     ),
@@ -273,8 +346,8 @@ class _ProgressPageState extends State<ProgressPage>
                   const SizedBox(width: 12),
                   Expanded(
                     child: _buildStatCard(
-                      'Completed',
-                      '${weeklySummary.values.where((v) => v > 0).length}',
+                      'Completed Today',
+                      '${habits.where((h) => h.isCompleted).length}',
                       Icons.check_circle,
                       Colors.green,
                     ),
@@ -295,8 +368,8 @@ class _ProgressPageState extends State<ProgressPage>
                   const SizedBox(width: 12),
                   Expanded(
                     child: _buildStatCard(
-                      'Streak',
-                      '${_calculateStreak(weeklySummary)} days',
+                      'This Week',
+                      '${weeklySummary.values.reduce((a, b) => a + b).toInt()} total',
                       Icons.local_fire_department,
                       Colors.red,
                     ),
@@ -357,7 +430,8 @@ class _ProgressPageState extends State<ProgressPage>
                     const SizedBox(height: 20),
                     SizedBox(
                       height: 250,
-                      child: weeklySummary.isEmpty
+                      child: weeklySummary.isEmpty || 
+                             weeklySummary.values.every((v) => v == 0)
                           ? _buildEmptyChart()
                           : BarChart(
                               BarChartData(
@@ -488,7 +562,7 @@ class _ProgressPageState extends State<ProgressPage>
                 ),
               ),
               const SizedBox(height: 16),
-              _buildRecentActivities(),
+              _buildRecentActivities(habits),
             ],
           ),
         ),
@@ -579,28 +653,73 @@ class _ProgressPageState extends State<ProgressPage>
     );
   }
 
-  Widget _buildRecentActivities() {
-    // Mock recent activities data
-    final activities = [
-      {
-        'title': 'Drink Water completed',
-        'time': '2 hours ago',
-        'icon': Icons.water_drop,
-        'color': Colors.blue,
-      },
-      {
-        'title': 'Morning Exercise completed',
-        'time': '5 hours ago',
-        'icon': Icons.fitness_center,
-        'color': Colors.green,
-      },
-      {
-        'title': 'Read Books completed',
-        'time': '1 day ago',
-        'icon': Icons.book,
-        'color': Colors.orange,
-      },
-    ];
+  Widget _buildRecentActivities(List<Habit> habits) {
+    // Generate recent activities from actual habit data
+    List<Map<String, dynamic>> activities = [];
+    
+    for (var habit in habits) {
+      if (habit.completionDates.isNotEmpty) {
+        // Sort completion dates and get the most recent ones
+        var sortedDates = habit.completionDates.toList()
+          ..sort((a, b) => b.compareTo(a));
+        
+        for (int i = 0; i < sortedDates.length && i < 2; i++) {
+          final date = sortedDates[i];
+          final now = DateTime.now();
+          final difference = now.difference(date);
+          
+          String timeAgo;
+          if (difference.inDays > 0) {
+            timeAgo = '${difference.inDays} day${difference.inDays > 1 ? 's' : ''} ago';
+          } else if (difference.inHours > 0) {
+            timeAgo = '${difference.inHours} hour${difference.inHours > 1 ? 's' : ''} ago';
+          } else {
+            timeAgo = 'Just now';
+          }
+          
+          activities.add({
+            'title': '${habit.name} completed',
+            'time': timeAgo,
+            'icon': Icons.check_circle,
+            'color': Colors.green,
+          });
+        }
+      }
+    }
+    
+    // Sort by most recent and take top 3
+    if (activities.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Center(
+          child: Column(
+            children: [
+              Icon(Icons.history, size: 48, color: Colors.grey[400]),
+              const SizedBox(height: 16),
+              Text(
+                'No recent activities',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Text(
+                'Complete some habits to see activities here',
+                style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    
+    activities = activities.take(3).toList();
 
     return Column(
       children: activities.map((activity) {
@@ -664,29 +783,16 @@ class _ProgressPageState extends State<ProgressPage>
   }
 
   String _getBestDay(Map<String, double> summary) {
-    if (summary.isEmpty) return 'N/A';
+    if (summary.isEmpty || summary.values.every((v) => v == 0)) return 'N/A';
 
     var maxEntry = summary.entries.reduce((a, b) => a.value > b.value ? a : b);
     return maxEntry.key;
   }
 
-  int _calculateStreak(Map<String, double> summary) {
-    // Simple streak calculation - count consecutive days with > 0 habits
-    int streak = 0;
-    for (var value in summary.values.toList().reversed) {
-      if (value > 0) {
-        streak++;
-      } else {
-        break;
-      }
-    }
-    return streak;
-  }
-
   double _getMaxY(Map<String, double> summary) {
-    if (summary.isEmpty) return 10;
+    if (summary.isEmpty || summary.values.every((v) => v == 0)) return 5;
 
     double maxValue = summary.values.reduce((a, b) => a > b ? a : b).toDouble();
-    return (maxValue + 2).ceilToDouble(); // Add some padding
+    return (maxValue + 1).ceilToDouble(); // Add some padding
   }
 }
