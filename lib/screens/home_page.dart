@@ -6,10 +6,14 @@ import '../models/habit.dart';
 import 'add_habit_page.dart';
 import 'progress_page.dart';
 
+    final box = Hive.box<Habit>('habits');
+    final habits = box.values.toList();
+
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
+
   Widget build(BuildContext context) {
     return ValueListenableBuilder<Box<Habit>>(
       valueListenable: Hive.box<Habit>('habits').listenable(),
@@ -59,7 +63,8 @@ class HomePage extends StatelessWidget {
                     },
                   ),
                 ),
-          floatingActionButton: FloatingActionButton.extended(
+          floatingActionButton: habits.isEmpty ? null :
+          FloatingActionButton.extended(
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (context) => const AddHabitPage()),
             ),
