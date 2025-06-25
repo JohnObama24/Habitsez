@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shimmer/shimmer.dart';
 import '../models/habit.dart';
+import 'package:habitsez/providers/habit_provider.dart';
+import 'package:provider/provider.dart';
 
 class ProgressPage extends StatefulWidget {
   const ProgressPage({super.key});
@@ -117,6 +119,8 @@ class _ProgressPageState extends State<ProgressPage>
 
   @override
   Widget build(BuildContext context) {
+
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -305,6 +309,7 @@ class _ProgressPageState extends State<ProgressPage>
     final weeklySummary = _calculateWeeklySummary();
     final box = Hive.box<Habit>('habits');
     final habits = box.values.toList();
+    final streak = Provider.of<HabitProvider>(context).GetCurrentStreak;
 
     return FadeTransition(
       opacity: _fadeAnimation,
@@ -368,8 +373,8 @@ class _ProgressPageState extends State<ProgressPage>
                   const SizedBox(width: 12),
                   Expanded(
                     child: _buildStatCard(
-                      'This Week',
-                      '${weeklySummary.values.reduce((a, b) => a + b).toInt()} total',
+                      'Streak',
+                      '$streak totals',
                       Icons.local_fire_department,
                       Colors.red,
                     ),

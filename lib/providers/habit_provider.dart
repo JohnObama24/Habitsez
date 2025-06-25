@@ -14,6 +14,31 @@ class HabitProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  int get GetCurrentStreak {
+    final today = DateTime.now();
+    int streak = 0;
+
+    DateTime dateToCek = DateTime(today.year, today.month, today.day);
+
+    while (true) {
+      bool found = _habits.any((habit) {
+        return habit.completionDates.any((date) {
+          final d = DateTime(date.year, date.month, date.day);
+          return d == dateToCek;
+        }); 
+      });
+
+      if (found) {
+        streak++;
+        dateToCek = dateToCek.subtract(const Duration(days: 1));
+      }else {
+        break;
+      }
+    }
+      return streak;
+  }
+  
+
   void toogleHabit(Habit habit) {
     habit.isCompleted = !habit.isCompleted;
 
