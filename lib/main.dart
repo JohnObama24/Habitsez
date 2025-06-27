@@ -14,8 +14,8 @@ Future<void> main() async {
   // await Hive.openBox<Habit>('habits');
   await Hive.openBox<Habit>('habits');
 
-  // await NotificationService().init();
-  // await NotificationService().scheduleDaily8pmReminder();
+  await NotificationService().init();
+  await NotificationService().scheduleDaily8pmReminder();
 
   runApp(
     ChangeNotifierProvider(

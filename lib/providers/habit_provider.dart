@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:habitsez/models/habit.dart';
+import 'package:habitsez/services/notification_service.dart';
 
 class HabitProvider extends ChangeNotifier {
   final List<Habit> _habits = [
@@ -7,11 +9,33 @@ class HabitProvider extends ChangeNotifier {
     Habit(name: 'Drink 2 liters of water'),
   ];
 
+  late Timer _habitCheckTimer;
+
+  HabitProvider() {
+    
+    _habitCheckTimer = Timer.periodic(const Duration(minutes: 30), (timer) async {
+      if (hasIncompleteHabitsToday()) {
+        await NotificationService().showReminderNotification();
+      }
+    });
+  }
+
   List<Habit> get habits => _habits;
 
   void addHabit(String name) {
     _habits.add(Habit(name: name));
     notifyListeners();
+  }
+
+  bool hasIncompleteHabitsToday() {
+    final today = DateTime.now();
+    return _habits.any((habit) {
+      final doneToday = habit.completionDates.any((date) =>
+          date.year == today.year &&
+          date.month == today.month &&
+          date.day == today.day);
+      return !doneToday;
+    });
   }
 
   int get GetCurrentStreak {
@@ -25,19 +49,19 @@ class HabitProvider extends ChangeNotifier {
         return habit.completionDates.any((date) {
           final d = DateTime(date.year, date.month, date.day);
           return d == dateToCek;
-        }); 
+        });
       });
 
       if (found) {
         streak++;
         dateToCek = dateToCek.subtract(const Duration(days: 1));
-      }else {
+      } else {
         break;
       }
     }
-      return streak;
+
+    return streak;
   }
-  
 
   void toogleHabit(Habit habit) {
     habit.isCompleted = !habit.isCompleted;
@@ -102,5 +126,11 @@ class HabitProvider extends ChangeNotifier {
       default:
         return '';
     }
+  }
+
+  @override
+  void dispose() {
+    _habitCheckTimer.cancel(); // 🧼 Stop timer saat provider dibuang
+    super.dispose();
   }
 }
