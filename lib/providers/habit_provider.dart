@@ -5,8 +5,6 @@ import 'package:habitsez/services/notification_service.dart';
 
 class HabitProvider extends ChangeNotifier {
   final List<Habit> _habits = [
-    Habit(name: 'Touch a grass'),
-    Habit(name: 'Drink 2 liters of water'),
   ];
 
   late Timer _habitCheckTimer;

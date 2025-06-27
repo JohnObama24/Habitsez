@@ -60,7 +60,7 @@ class HomePage extends StatelessWidget {
                     },
                   ),
                 ),
-          floatingActionButton: FloatingActionButton.extended(
+          floatingActionButton: habits.isEmpty? null : FloatingActionButton.extended(
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (context) => const AddHabitPage()),
             ),
