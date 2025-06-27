@@ -10,9 +10,9 @@ class HabitProvider extends ChangeNotifier {
   ];
 
   late Timer _habitCheckTimer;
+  final Set<String> _hiddenHabitKeys = {};
 
   HabitProvider() {
-    
     _habitCheckTimer = Timer.periodic(const Duration(minutes: 30), (timer) async {
       if (hasIncompleteHabitsToday()) {
         await NotificationService().showReminderNotification();
@@ -20,13 +20,47 @@ class HabitProvider extends ChangeNotifier {
     });
   }
 
-  List<Habit> get habits => _habits;
+  List<Habit> get habits =>
+      _habits.where((habit) => !_hiddenHabitKeys.contains(habit.name)).toList();
 
   void addHabit(String name) {
     _habits.add(Habit(name: name));
     notifyListeners();
   }
 
+  void deleteHabit(Habit habit) {
+    _habits.remove(habit);
+    _hiddenHabitKeys.remove(habit.name);
+    notifyListeners();
+  }
+
+  void toggleHabit(Habit habit) {
+    final today = DateTime.now();
+    final isCompletedToday = habit.completionDates.any((date) =>
+        date.year == today.year &&
+        date.month == today.month &&
+        date.day == today.day);
+
+    if (isCompletedToday) {
+      habit.completionDates.removeWhere((date) =>
+          date.year == today.year &&
+          date.month == today.month &&
+          date.day == today.day);
+      
+      _hiddenHabitKeys.remove(habit.name);
+    } else {
+      habit.completionDates.add(DateTime(today.year, today.month, today.day));
+      
+      Future.delayed(const Duration(seconds: 10), () {
+        _hiddenHabitKeys.add(habit.name);
+        notifyListeners();
+      });
+    }
+    
+    notifyListeners();
+  }
+
+  // mmk
   bool hasIncompleteHabitsToday() {
     final today = DateTime.now();
     return _habits.any((habit) {
@@ -38,23 +72,23 @@ class HabitProvider extends ChangeNotifier {
     });
   }
 
-  int get GetCurrentStreak {
+  // Hitung streak anj lah
+  int get getCurrentStreak {
     final today = DateTime.now();
     int streak = 0;
-
-    DateTime dateToCek = DateTime(today.year, today.month, today.day);
+    DateTime dateToCheck = DateTime(today.year, today.month, today.day);
 
     while (true) {
       bool found = _habits.any((habit) {
         return habit.completionDates.any((date) {
           final d = DateTime(date.year, date.month, date.day);
-          return d == dateToCek;
+          return d == dateToCheck;
         });
       });
 
       if (found) {
         streak++;
-        dateToCek = dateToCek.subtract(const Duration(days: 1));
+        dateToCheck = dateToCheck.subtract(const Duration(days: 1));
       } else {
         break;
       }
@@ -63,22 +97,6 @@ class HabitProvider extends ChangeNotifier {
     return streak;
   }
 
-  void toogleHabit(Habit habit) {
-    habit.isCompleted = !habit.isCompleted;
-
-    final today = DateTime.now();
-
-    if (habit.isCompleted) {
-      habit.completionDates.add(today);
-    } else {
-      habit.completionDates.removeWhere((date) =>
-          date.year == today.year &&
-          date.month == today.month &&
-          date.day == today.day);
-    }
-
-    notifyListeners();
-  }
 
   Map<String, double> get weeklySummary {
     final Map<String, double> summary = {
@@ -130,7 +148,7 @@ class HabitProvider extends ChangeNotifier {
 
   @override
   void dispose() {
-    _habitCheckTimer.cancel(); // 🧼 Stop timer saat provider dibuang
+    _habitCheckTimer.cancel();
     super.dispose();
   }
 }

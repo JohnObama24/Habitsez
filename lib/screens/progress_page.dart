@@ -309,7 +309,7 @@ class _ProgressPageState extends State<ProgressPage>
     final weeklySummary = _calculateWeeklySummary();
     final box = Hive.box<Habit>('habits');
     final habits = box.values.toList();
-    final streak = Provider.of<HabitProvider>(context).GetCurrentStreak;
+    final streak = Provider.of<HabitProvider>(context).getCurrentStreak;
 
     return FadeTransition(
       opacity: _fadeAnimation,

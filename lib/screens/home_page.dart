@@ -1,24 +1,21 @@
 // home_page.dart
 import 'package:flutter/material.dart';
+import 'package:habitsez/providers/habit_provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 import '../models/habit.dart';
 import 'add_habit_page.dart';
 import 'progress_page.dart';
 
-    final box = Hive.box<Habit>('habits');
-    final habits = box.values.toList();
-
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
-
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<Box<Habit>>(
-      valueListenable: Hive.box<Habit>('habits').listenable(),
-      builder: (context, box, _) {
-        final habits = box.values.toList().cast<Habit>();
+    return Consumer<HabitProvider>(
+      builder: (context, habitProvider, child) {
+        final habits = habitProvider.habits;
 
         return Scaffold(
           backgroundColor: Colors.grey[50],
@@ -59,12 +56,11 @@ class HomePage extends StatelessWidget {
                     itemCount: habits.length,
                     itemBuilder: (context, index) {
                       final habit = habits[index];
-                      return _buildHabitCard(habit, context);
+                      return _buildHabitCard(habit, context, habitProvider);
                     },
                   ),
                 ),
-          floatingActionButton: habits.isEmpty ? null :
-          FloatingActionButton.extended(
+          floatingActionButton: FloatingActionButton.extended(
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (context) => const AddHabitPage()),
             ),
@@ -86,7 +82,7 @@ class HomePage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: Colors.teal.withAlpha(20).withValues(alpha: 0.1),
+              color: Colors.teal.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(Icons.track_changes, size: 64, color: Colors.teal[400]),
@@ -127,7 +123,14 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildHabitCard(Habit habit, BuildContext context) {
+  Widget _buildHabitCard(Habit habit, BuildContext context, HabitProvider habitProvider) {
+    // Check if habit is completed today
+    final today = DateTime.now();
+    final isCompletedToday = habit.completionDates.any((date) =>
+        date.year == today.year &&
+        date.month == today.month &&
+        date.day == today.day);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -135,7 +138,7 @@ class HomePage extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -149,12 +152,12 @@ class HomePage extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             border: Border.all(
-              color: habit.isCompleted ? Colors.teal : Colors.grey[300]!,
+              color: isCompletedToday ? Colors.teal : Colors.grey[300]!,
               width: 2,
             ),
-            color: habit.isCompleted ? Colors.teal : Colors.transparent,
+            color: isCompletedToday ? Colors.teal : Colors.transparent,
           ),
-          child: habit.isCompleted
+          child: isCompletedToday
               ? const Icon(Icons.check, size: 16, color: Colors.white)
               : null,
         ),
@@ -163,23 +166,23 @@ class HomePage extends StatelessWidget {
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: habit.isCompleted ? Colors.grey[500] : Colors.black87,
-            decoration: habit.isCompleted
+            color: isCompletedToday ? Colors.grey[500] : Colors.black87,
+            decoration: isCompletedToday
                 ? TextDecoration.lineThrough
                 : TextDecoration.none,
           ),
         ),
         subtitle: Text(
-          habit.isCompleted ? 'Completed today' : 'Tap to complete',
+          isCompletedToday ? 'Completed today' : 'Tap to complete',
           style: TextStyle(
             fontSize: 12,
-            color: habit.isCompleted ? Colors.teal[300] : Colors.grey[500],
+            color: isCompletedToday ? Colors.teal[300] : Colors.grey[500],
           ),
         ),
         trailing: PopupMenuButton<String>(
           onSelected: (value) {
             if (value == 'delete') {
-              _showDeleteDialog(context, habit);
+              _showDeleteDialog(context, habit, habitProvider);
             }
           },
           itemBuilder: (context) => [
@@ -205,37 +208,13 @@ class HomePage extends StatelessWidget {
           ),
         ),
         onTap: () {
-          final today = DateTime.now();
-
-          habit.isCompleted = !habit.isCompleted;
-
-          if (habit.isCompleted) {
-            if (!habit.completionDates.any(
-              (d) =>
-                  d.year == today.year &&
-                  d.month == today.month &&
-                  d.day == today.day,
-            )) {
-              print('✅ Completed Dates: ${habit.completionDates}');
-
-              habit.completionDates.add(today);
-            }
-          } else {
-            habit.completionDates.removeWhere(
-              (d) =>
-                  d.year == today.year &&
-                  d.month == today.month &&
-                  d.day == today.day,
-            );
-          }
-
-          habit.save();
+          habitProvider.toggleHabit(habit);
         },
       ),
     );
   }
 
-  void _showDeleteDialog(BuildContext context, Habit habit) {
+  void _showDeleteDialog(BuildContext context, Habit habit, HabitProvider habitProvider) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -249,7 +228,7 @@ class HomePage extends StatelessWidget {
           ),
           ElevatedButton(
             onPressed: () {
-              habit.delete();
+              habitProvider.deleteHabit(habit);
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(

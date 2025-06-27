@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:habitsez/models/habit.dart';
-import 'package:hive/hive.dart';
+import 'package:habitsez/providers/habit_provider.dart';
+import 'package:provider/provider.dart';
 
 class AddHabitPage extends StatefulWidget {
   const AddHabitPage({super.key});
@@ -46,10 +47,11 @@ class _AddHabitPageState extends State<AddHabitPage>
       await Future.delayed(const Duration(milliseconds: 800));
 
       final newHabitName = _controller.text.trim();
-      final box = Hive.box<Habit>('habits');
-      box.add(Habit(name: newHabitName, isCompleted: false));
-
+      
+      // Use Provider instead of Hive
       if (mounted) {
+        Provider.of<HabitProvider>(context, listen: false).addHabit(newHabitName);
+        
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -98,7 +100,7 @@ class _AddHabitPageState extends State<AddHabitPage>
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Colors.teal.withValues(alpha: .1),
+                    color: Colors.teal.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
@@ -190,7 +192,7 @@ class _AddHabitPageState extends State<AddHabitPage>
                       margin: const EdgeInsets.all(12),
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.teal.withValues(alpha: .1),
+                        color: Colors.teal.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
@@ -233,9 +235,9 @@ class _AddHabitPageState extends State<AddHabitPage>
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withValues(alpha: .05),
+                    color: Colors.blue.withOpacity(0.05),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.blue.withValues(alpha: .1)),
+                    border: Border.all(color: Colors.blue.withOpacity(0.1)),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
